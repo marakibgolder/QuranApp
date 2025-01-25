@@ -1,0 +1,204 @@
+﻿@page "/salahttime"
+
+<div class="salah-container">
+    <div class="card mx-auto mt-4 shadow-lg">
+        <div class="card-body">
+            <h3 class="card-title text-center">Prayer Times</h3>
+            <p class="text-center text-muted"><strong>Date:</strong> @currentDate</p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Prayer</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (prayerTimes != null)
+                        {
+                            @foreach (var prayer in prayerTimes)
+                            {
+                                <tr>
+                                    <td>@prayer.Key</td>
+                                    <td>@prayer.Value</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-center mt-3"><strong>Upcoming Salah:</strong> @nextSalah</p>
+        </div>
+    </div>
+
+    @if (loading)
+    {
+        <div class="loading-text text-center">
+            <p>Loading prayer times...</p>
+        </div>
+    }
+</div>
+
+<style>
+    /* Overall container */
+    .salah-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px;
+        font-family: 'Roboto', sans-serif;
+        background: linear-gradient(135deg, #a8c0ff, #3f2b96); /* Soft blue to purple gradient */
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Card styling */
+    .card {
+        border-radius: 10px;
+        background-color: #ffffff;
+        padding: 30px;
+        border: none;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+    /* Card title */
+    .card-title {
+        font-size: 2.5em;
+        color: #3f2b96;
+        font-weight: 600;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+    }
+
+    /* Date text styling */
+    .text-muted {
+        font-size: 1.1em;
+        color: #757575;
+    }
+
+    /* Table styling */
+    table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+    }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: center;
+            font-size: 1.1em;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #3f2b96;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        table tr:hover {
+            background-color: #e1f5fe;
+            cursor: pointer;
+        }
+
+    /* Upcoming Salah styling */
+    .text-center {
+        font-size: 1.3em;
+        color: #4caf50;
+        font-weight: 600;
+        text-transform: capitalize;
+        margin-top: 20px;
+    }
+
+    /* Loading text styling */
+    .loading-text {
+        text-align: center;
+        font-size: 1.5em;
+        color: #ff9800;
+        font-weight: bold;
+        margin-top: 30px;
+    }
+</style>
+
+@code {
+    private string currentDate;
+    private Dictionary<string, string> prayerTimes;
+    private string nextSalah;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentDate = DateTime.Now.ToString("dddd, MMMM dd, yyyy");
+            await LoadPrayerTimesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching prayer times: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadPrayerTimesAsync()
+    {
+        var httpClient = new HttpClient();
+        var latitude = 3.1390; // Latitude for Kuala Lumpur, Malaysia
+        var longitude = 101.6869; // Longitude for Kuala Lumpur, Malaysia
+        var method = 2; // Calculation method (e.g., Muslim World League)
+
+        var apiUrl = $"https://api.aladhan.com/v1/timings?latitude={latitude}&longitude={longitude}&method={method}";
+
+        var response = await httpClient.GetAsync(apiUrl);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            var apiResponse = JsonSerializer.Deserialize<ApiResponse>(json);
+
+            if (apiResponse != null && apiResponse.data != null)
+            {
+                prayerTimes = apiResponse.data.timings;
+                CalculateNextSalah();
+            }
+        }
+    }
+
+    private void CalculateNextSalah()
+    {
+        var now = DateTime.Now;
+        nextSalah = "No upcoming Salah today.";
+
+        foreach (var prayer in prayerTimes)
+        {
+            if (DateTime.TryParse(prayer.Value, out var prayerTime))
+            {
+                if (prayerTime > now)
+                {
+                    nextSalah = $"{prayer.Key} at {prayer.Value}";
+                    break;
+                }
+            }
+        }
+    }
+
+    private class ApiResponse
+    {
+        public Data data { get; set; }
+    }
+
+    private class Data
+    {
+        public Dictionary<string, string> timings { get; set; }
+    }
+}

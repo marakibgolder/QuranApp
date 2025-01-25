@@ -1,0 +1,285 @@
+﻿@page "/calendar"
+
+<h3 class="text-center my-5 text-primary">Muslim Calendar</h3>
+
+<div class="container mt-4">
+    <!-- Current Date Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h4 class="fw-bold text-secondary">Islamic Calendar - @currentIslamicYear</h4>
+            <div class="alert alert-info my-3 shadow">
+                <strong class="text-dark">Today's Islamic Date: </strong>
+                @currentHijriDate @currentIslamicMonth, @currentIslamicYear
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Section -->
+    @foreach (var month in yearCalendar)
+    {
+        <div class="row mb-5">
+            <div class="col-md-12 text-center">
+                <div class="card shadow-lg border-light mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-primary">@month.IslamicMonthName</h5>
+                        <table class="table table-bordered text-center">
+                            <thead class="bg-primary text-white">
+                                <tr>
+                                    <th>Sun</th>
+                                    <th>Mon</th>
+                                    <th>Tue</th>
+                                    <th>Wed</th>
+                                    <th>Thu</th>
+                                    <th>Fri</th>
+                                    <th>Sat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var week in month.Days)
+                                {
+                                    <tr>
+                                        @foreach (var day in week)
+                                        {
+                                            <td class="@(day == 0 ? "empty-cell" : "calendar-cell")">
+                                                @if (day != 0)
+                                                {
+                                                    <span class="fw-bold day-cell" @onclick="() => ShowEnglishDate(day, month.IslamicMonthName)">
+                                                        @day
+                                                    </span>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal for Showing Gregorian Date -->
+@if (showModal)
+{
+    <div class="modal show d-block">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-primary">Gregorian Date</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Islamic Date:</strong> @selectedIslamicDate @selectedIslamicMonth</p>
+                    <p><strong>Gregorian Date:</strong> @selectedGregorianDate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private int currentIslamicYear;
+    private string currentHijriDate;
+    private string currentIslamicMonth;
+    private List<MonthCalendar> yearCalendar;
+
+    private bool showModal = false;
+    private string selectedIslamicDate;
+    private string selectedIslamicMonth;
+    private string selectedGregorianDate;
+
+    protected override void OnInitialized()
+    {
+        var islamicCalendar = new System.Globalization.HijriCalendar();
+        DateTime today = DateTime.Now;
+
+        currentIslamicYear = islamicCalendar.GetYear(today);
+        currentIslamicMonth = islamicMonths[islamicCalendar.GetMonth(today) - 1];
+        currentHijriDate = islamicCalendar.GetDayOfMonth(today).ToString();
+
+        yearCalendar = GenerateYearCalendar(currentIslamicYear);
+    }
+
+    private List<MonthCalendar> GenerateYearCalendar(int islamicYear)
+    {
+        var islamicCalendar = new System.Globalization.HijriCalendar();
+        var calendar = new List<MonthCalendar>();
+
+        for (int month = 1; month <= 12; month++)
+        {
+            var firstDayOfMonth = islamicCalendar.ToDateTime(islamicYear, month, 1, 0, 0, 0, 0);
+            var daysInMonth = islamicCalendar.GetDaysInMonth(islamicYear, month);
+
+            calendar.Add(new MonthCalendar
+                {
+                    IslamicMonthName = islamicMonths[month - 1],
+                    Days = GenerateMonthDays(firstDayOfMonth, daysInMonth)
+                });
+        }
+
+        return calendar;
+    }
+
+    private int[][] GenerateMonthDays(DateTime firstDayOfMonth, int daysInMonth)
+    {
+        var days = new List<int[]>();
+        int firstDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
+        int currentDay = 1;
+
+        for (int i = 0; i < 6; i++)
+        {
+            var week = new int[7];
+            for (int j = 0; j < 7; j++)
+            {
+                if (i == 0 && j < firstDayOfWeek || currentDay > daysInMonth)
+                {
+                    week[j] = 0;
+                }
+                else
+                {
+                    week[j] = currentDay++;
+                }
+            }
+
+            days.Add(week);
+            if (currentDay > daysInMonth)
+                break;
+        }
+
+        return days.ToArray();
+    }
+
+    private void ShowEnglishDate(int islamicDay, string islamicMonth)
+    {
+        var islamicCalendar = new System.Globalization.HijriCalendar();
+        int islamicMonthIndex = islamicMonths.IndexOf(islamicMonth) + 1;
+        DateTime islamicDate = islamicCalendar.ToDateTime(currentIslamicYear, islamicMonthIndex, islamicDay, 0, 0, 0, 0);
+
+        selectedIslamicDate = islamicDay.ToString();
+        selectedIslamicMonth = islamicMonth;
+        selectedGregorianDate = islamicDate.ToString("D");
+
+        showModal = true;
+    }
+
+    private void CloseModal() => showModal = false;
+
+    private List<string> islamicMonths = new List<string>
+    {
+        "Muharram",
+        "Safar",
+        "Rabi' al-Awwal",
+        "Rabi' al-Thani",
+        "Jumada al-Awwal",
+        "Jumada al-Thani",
+        "Rajab",
+        "Sha'ban",
+        "Ramadan",
+        "Shawwal",
+        "Dhu al-Qi'dah",
+        "Dhu al-Hijjah"
+    };
+
+    private class MonthCalendar
+    {
+        public string IslamicMonthName { get; set; }
+        public int[][] Days { get; set; }
+    }
+}
+
+<style>
+    /* General Styling */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        color: #212529;
+    }
+
+    h3 {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+    }
+
+    /* Alert for Today's Islamic Date */
+    .alert {
+        font-size: 1.2rem;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .badge {
+        font-size: 1rem;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+
+    /* Calendar Table Styling */
+    .calendar-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+        .calendar-table th,
+        .calendar-table td {
+            padding: 10px;
+            font-size: 1rem;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .calendar-table th {
+            font-weight: bold;
+            background-color: #f1f3f5;
+        }
+
+        .calendar-table td {
+            background-color: #fff;
+            color: #212529;
+        }
+
+    /* Empty Cells */
+    .empty-cell {
+        background-color: #f8f9fa;
+    }
+
+    /* Highlight Current Day */
+    .highlight-cell {
+        background-color: #ffc107;
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+        padding: 5px;
+    }
+
+    /* Weekend Days */
+    .calendar-table th.text-primary,
+    .calendar-table td.text-primary {
+        color: #007bff;
+    }
+
+    .calendar-table th.text-danger,
+    .calendar-table td.text-danger {
+        color: #dc3545;
+    }
+
+    /* Card Styling */
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        font-size: 1.2rem;
+        text-align: center;
+        padding: 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+</style>

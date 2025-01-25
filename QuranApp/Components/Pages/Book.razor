@@ -1,0 +1,144 @@
+﻿@page "/book"
+@using System.IO
+@using System.Collections.Generic
+
+<h3>Islamic Book Library</h3>
+
+<div class="book-list">
+    @foreach (var book in books)
+    {
+        <div class="book-item">
+            <img src="@book.CoverImage" alt="@book.Title" class="book-cover" />
+            <div class="book-info">
+                <h4>@book.Title</h4>
+                <p><strong>Author:</strong> @book.Author</p>
+                <p>@book.Description</p>
+                <a href="@book.DownloadLink" download="@book.Title">
+                    <button class="download-btn">Download</button>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    /* General body and container styles */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    h3 {
+        text-align: center;
+        margin-top: 20px;
+        color: #2c3e50;
+    }
+
+    .book-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .book-item {
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .book-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+    .book-cover {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-bottom: 2px solid #ddd;
+    }
+
+    .book-info {
+        padding: 15px;
+    }
+
+        .book-info h4 {
+            font-size: 1.25rem;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+
+        .book-info p {
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+
+    .download-btn {
+        background-color: #27ae60;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin-top: 10px;
+        transition: background-color 0.3s ease;
+    }
+
+        .download-btn:hover {
+            background-color: #2ecc71;
+        }
+</style>
+
+@code {
+    public class IslamicBook
+    {
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string DownloadLink { get; set; }
+        public string CoverImage { get; set; }
+    }
+
+    private List<IslamicBook> books = new List<IslamicBook>
+{
+    new IslamicBook
+    {
+        Title = "The Qur'an and Modern Science",
+        Author = "Dr. Maurice Bucaille",
+        Description = "This book examines the compatibility between the teachings of the Qur'an and modern scientific discoveries.",
+        DownloadLink = "https://www.islamland.com/uploads/books/The_Quran_and_Modern_Science_maurice_bucaile-eng.pdf",
+        CoverImage = "/images/TheQuranAndModernScienceCover.jpg"
+    },
+    new IslamicBook
+    {
+        Title = "The Noble Quran",
+        Author = "Translated by Various Scholars",
+        Description = "The Quran is the holy book of Islam, believed to be the word of God as revealed to Prophet Muhammad (PBUH).",
+        DownloadLink = "https://archive.org/download/TheNobleQuranHilaliMuhsinKhan/The%20Noble%20Qur%27an%20-%20Hilali%20%26%20Muhsin%20Khan.pdf",
+        CoverImage = "/images/TheNobleQuranCover.jpg"
+    },
+    new IslamicBook
+    {
+        Title = "Sahih al-Bukhari",
+        Author = "Imam Bukhari",
+        Description = "A collection of authentic sayings (Hadith) of Prophet Muhammad (PBUH), compiled by Imam Bukhari. One of the most authoritative Hadith collections.",
+        DownloadLink = "https://archive.org/details/sahih-al-bukhari-arabic-english-full/sahih-al-bukhari-english-vol-1/",
+        CoverImage = "/images/SahihAlBukhariCover.jpg"
+    },
+    new IslamicBook
+    {
+        Title = "The Sealed Nectar (Ar-Raheeq Al-Makhtum)",
+        Author = "Safi-ur-Rahman al-Mubarakpuri",
+        Description = "A well-known biography of Prophet Muhammad (PBUH), detailing his life, mission, and contributions to humanity.",
+        DownloadLink = "https://archive.org/download/sealed-nectar-color/sealed-nectar-color.pdf",
+        CoverImage = "/images/TheSealedNectarCover.jpg"
+    }
+  };
+}

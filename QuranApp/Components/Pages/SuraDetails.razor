@@ -1,0 +1,140 @@
+﻿@page "/surahdetails/{SuraId:int}"
+@inject NavigationManager Navigation
+
+<h3 class="text-center mt-4">Sura Details</h3>
+
+<div class="container mt-4 mb-3">
+    @if (CurrentSura != null)
+    {
+        <!-- Surah Header Section -->
+        <div class="card mb-4 shadow-lg">
+            <div class="card-header text-center bg-info text-white">
+                <h4 class="m-0">@CurrentSura.name (@CurrentSura.translation)</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Transliteration:</strong> @CurrentSura.transliteration</p>
+                <p><strong>Type:</strong> @CurrentSura.type</p>
+                <p><strong>Total Verses:</strong> @CurrentSura.verses.Count</p>
+            </div>
+        </div>
+
+        <!-- Surah Verses Section -->
+        <div class="verse-list">
+            @foreach (var verse in CurrentSura.verses.Select((value, idx) => new { value, idx }))
+            {
+                <div class="verse-item border rounded p-4 mb-2 shadow-sm">
+                    <p class="arabic-text text-right font-weight-bold">
+                        <span class="verse-number">Verse @(@verse.idx + 1):</span> @verse.value.text
+                    </p>
+                    <p class="translation-text text-left text-muted">@verse.value.translation</p>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-4">
+            <button class="btn btn-info" @onclick="NavigateBack">Back to Suras</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-center">Loading sura details...</p>
+    }
+</div>
+
+<style>
+
+    .card-header {
+        background: linear-gradient(90deg, #00c6ff, #0072ff);
+        color: white;
+        padding: 25px;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .card-body {
+        font-size: 1.1rem;
+        color: #555;
+    }
+
+    .verse-list {
+        margin-top: 20px;
+    }
+
+    .verse-item {
+        background: #fff;
+        border: 1px solid #e4e4e4;
+        border-radius: 12px;
+        box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+        .verse-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0px 12px 18px rgba(0, 0, 0, 0.2);
+        }
+
+    .arabic-text {
+        font-family: 'Amiri', serif;
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .verse-number {
+        font-weight: bold;
+        color: #17a2b8;
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .translation-text {
+        font-family: Arial, sans-serif;
+        font-size: 1.1rem;
+        color: #777;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(45deg, #ff6a00, #ee0979);
+        color: white;
+        padding: 12px 25px;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 50px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+        transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .btn-gradient:hover {
+            background: linear-gradient(45deg, #ff6a00, #ff007a);
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+    .text-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int SuraId { get; set; }
+
+    private Surah? CurrentSura;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            CurrentSura = QuranApp.Data.QuranData.Surahs?.FirstOrDefault(s => s.id == SuraId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading Surah: {ex.Message}");
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+}
